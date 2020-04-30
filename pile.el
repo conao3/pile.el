@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Version: 0.0.1
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "26.1") (magit-section "2.90"))
 ;; URL: https://github.com/conao3/pile.el
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -27,6 +27,8 @@
 
 
 ;;; Code:
+
+(require 'magit-section)
 
 (defgroup pile nil
   "Pile information using magit-section."

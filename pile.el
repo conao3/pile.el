@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'subr-x)
 (require 'magit-section)
 
 (defgroup pile nil
@@ -35,6 +36,27 @@
   :prefix "pile-"
   :group 'tools
   :link '(url-link :tag "Github" "https://github.com/conao3/pile.el"))
+
+(defvar-local pile-root-section nil
+  "Root magit-section in the current buffer.")
+
+(defun pile-buffer (&optional nodisplay)
+  "Return pile buffer and display if not NODISPLAY."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*pile*")
+    (unless pile-root-section
+      (pile-section-mode)
+      (let ((inhibit-read-only t))
+        (setq pile-root-section
+              (magit-insert-section (pilebuf)
+                (insert "\n")))))
+    (unless nodisplay
+      (switch-to-buffer-other-window (current-buffer)))
+    (current-buffer)))
+
+(define-derived-mode pile-section-mode magit-section-mode "Pile"
+  "Major-mode for pile buffer."
+  :group 'pile)
 
 (provide 'pile)
 

@@ -37,6 +37,9 @@
   :group 'tools
   :link '(url-link :tag "Github" "https://github.com/conao3/pile.el"))
 
+
+;;; functions
+
 (defvar-local pile-root-section nil
   "Root magit-section in the current buffer.")
 
@@ -53,6 +56,9 @@
     (unless nodisplay
       (switch-to-buffer-other-window (current-buffer)))
     (current-buffer)))
+
+
+;;; main
 
 (define-derived-mode pile-section-mode magit-section-mode "Pile"
   "Major-mode for pile buffer."

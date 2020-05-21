@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Version: 0.0.1
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "26.1") (magit-section "2.90"))
+;; Package-Requires: ((emacs "26.1") (magit-section "2.90") (async-await "1.1"))
 ;; URL: https://github.com/conao3/pile.el
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,9 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'esh-mode)
 (require 'magit-section)
+(require 'async-await)
 
 (defgroup pile nil
   "Pile information using magit-section."
@@ -44,7 +46,8 @@
   "Root magit-section in the current buffer.")
 
 (defun pile-buffer (&optional nodisplay)
-  "Return pile buffer and display if not NODISPLAY."
+  "Return pile buffer and display if not NODISPLAY.
+See `magit-process-buffer'."
   (interactive)
   (with-current-buffer (get-buffer-create "*pile*")
     (unless pile-root-section
@@ -57,8 +60,59 @@
       (switch-to-buffer-other-window (current-buffer)))
     (current-buffer)))
 
+(defun pile--insert-section (program args)
+  "Insert new section for PROGRAM with ARGS.
+See `magit-process-insert-section'."
+  (let ((inhibit-read-only t)
+        (magit-insert-section--parent magit-root-section)
+        (magit-insert-section--oldroot nil))
+    (goto-char (1- (point-max)))
+    (prog1 (magit-insert-section (process)
+             (insert (propertize (file-name-nondirectory program)
+                                 'font-lock-face 'magit-section-heading) " ")
+             (insert (propertize (mapconcat #'shell-quote-argument args " ")
+                                 'font-lock-face 'magit-section-heading))
+             (magit-insert-heading)
+             (insert "\n"))
+      (backward-char 1))))
+
+(defun pile--prepare-eshell-marker ()
+  "Prepare eshel marker for `current-buffer', `point'."
+  (set (make-local-variable 'eshell-last-input-start) (point-marker))
+  (set (make-local-variable 'eshell-last-input-end) (point-marker))
+  (set (make-local-variable 'eshell-last-output-start) (point-marker))
+  (set (make-local-variable 'eshell-last-output-end) (point-marker))
+  (set (make-local-variable 'eshell-last-output-block-begin) (point)))
+
+(defvar pile-process nil)
+
+(defun pile--promise-make-process (section program args)
+  "Run PROGRAM with ARGS and output at SECTION."
+  (let* ((ptr (oref section end))
+         (buf (marker-buffer ptr)))
+    (with-current-buffer buf
+      (goto-char (- ptr 1))
+      (pile--prepare-eshell-marker)
+      (apply
+       #'promise:make-process-with-handler
+       program
+       (lambda (proc)
+         (setq pile-process proc)
+         (set-process-filter
+          proc
+          (lambda (proc string)
+            (let ((inhibit-read-only t))
+              (eshell-output-filter proc string)))))
+       args))))
+
 
 ;;; main
+
+(async-defun pile-make-process (program &rest args)
+  "Exec PROGRAM with ARGS via `shell-command' async and output `pile-buffer'.
+See `magit-call-process'."
+  (let ((section (pile--insert-section program args)))
+    (await (pile--promise-make-process section program args))))
 
 (define-derived-mode pile-section-mode magit-section-mode "Pile"
   "Major-mode for pile buffer."

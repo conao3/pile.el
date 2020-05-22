@@ -39,6 +39,11 @@
   :group 'tools
   :link '(url-link :tag "Github" "https://github.com/conao3/pile.el"))
 
+(defface pile-section-heading
+  `((t (:inherit magit-section-heading)))
+  "Face for section headings."
+  :group 'pile)
+
 
 ;;; functions
 
@@ -70,9 +75,9 @@ See `magit-process-insert-section'."
       (let ((magit-insert-section--parent pile-root-section))
         (magit-insert-section (process)
           (insert (propertize (file-name-nondirectory program)
-                              'font-lock-face 'magit-section-heading) " ")
+                              'font-lock-face 'pile-section-heading) " ")
           (insert (propertize (mapconcat #'shell-quote-argument args " ")
-                              'font-lock-face 'magit-section-heading))
+                              'font-lock-face 'pile-section-heading))
           (magit-insert-heading)
           (insert "\n\n\n"))))))
 

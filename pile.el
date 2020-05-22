@@ -200,7 +200,7 @@ This is done after all necessary filtering has been done."
   (let* ((ptr (oref section end))
          (buf (marker-buffer ptr)))
     (with-current-buffer buf
-      (goto-char (- ptr 2))
+      (goto-char (- ptr 1))
       (pile--prepare-eshell-marker)
       (pile--promise-make-process-with-handler
        command

@@ -44,8 +44,6 @@
 
 (defvar-local pile-root-section nil
   "Root magit-section in the current buffer.")
-(defvar-local pile-current-marker nil
-  "Current insert marker.")
 
 (defun pile-buffer (&optional nodisplay)
   "Return pile buffer and display if not NODISPLAY.
@@ -67,8 +65,8 @@ See `magit-process-insert-section'."
   (let ((inhibit-read-only t)
         (program (car command))
         (args (cdr command)))
-    (goto-char (point-max))
     (with-current-buffer (pile-buffer 'nodisplay)
+      (goto-char (point-max))
       (let ((magit-insert-section--parent pile-root-section))
         (magit-insert-section (process)
           (insert (propertize (file-name-nondirectory program)
@@ -76,8 +74,7 @@ See `magit-process-insert-section'."
           (insert (propertize (mapconcat #'shell-quote-argument args " ")
                               'font-lock-face 'magit-section-heading))
           (magit-insert-heading)
-          (setq pile-current-marker (point-marker))
-          (insert "\n"))))))
+          (insert "\n\n"))))))
 
 (defun pile--prepare-eshell-marker ()
   "Prepare eshel marker for `current-buffer', `point'."
@@ -149,7 +146,7 @@ Reject:
          (error (funcall cleanup)
                 (signal (car err) (cdr err))))))))
 
-(defun pile--output-filter (buf _proc string)
+(defun pile--output-filter (buf proc string)
   "Send the output to BUF from PROC (STRING) to the interactive display.
 This is done after all necessary filtering has been done."
   (let ((oprocbuf buf)
@@ -180,7 +177,9 @@ This is done after all necessary filtering has been done."
 		  (setq oend (+ oend nchars)))
               ;; Let the ansi-color overlay hooks run.
               (let ((inhibit-modification-hooks nil))
-                (insert-before-markers string))
+                (insert-before-markers
+                 (propertize string 'magit-section
+                             (process-get proc 'section))))
 	      (if (= (window-start) (point))
 		  (set-window-start (selected-window)
 				    (- (point) nchars)))
@@ -201,7 +200,7 @@ This is done after all necessary filtering has been done."
   (let* ((ptr (oref section end))
          (buf (marker-buffer ptr)))
     (with-current-buffer buf
-      ;; (goto-char (- ptr 1))
+      (goto-char (- ptr 2))
       (pile--prepare-eshell-marker)
       (pile--promise-make-process-with-handler
        command

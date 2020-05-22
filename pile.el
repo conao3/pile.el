@@ -74,7 +74,7 @@ See `magit-process-insert-section'."
           (insert (propertize (mapconcat #'shell-quote-argument args " ")
                               'font-lock-face 'magit-section-heading))
           (magit-insert-heading)
-          (insert "\n\n"))))))
+          (insert "\n\n\n"))))))
 
 (defun pile--prepare-eshell-marker ()
   "Prepare eshel marker for `current-buffer', `point'."
@@ -200,7 +200,7 @@ This is done after all necessary filtering has been done."
   (let* ((ptr (oref section end))
          (buf (marker-buffer ptr)))
     (with-current-buffer buf
-      (goto-char (- ptr 1))
+      (goto-char (- ptr 2))
       (pile--prepare-eshell-marker)
       (pile--promise-make-process-with-handler
        command

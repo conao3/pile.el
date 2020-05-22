@@ -107,7 +107,8 @@ Reject:
    (lambda (resolve reject)
      (let* ((program (car command))
             (stdout (generate-new-buffer (concat "*" program "-stdout*")))
-            (stderr (generate-new-buffer (concat "*" program "-stderr*")))
+            (stderr (unless merge-stderr
+                      (generate-new-buffer (concat "*" program "-stderr*"))))
             (stderr-pipe (unless merge-stderr
                            (make-pipe-process
                             :name (concat "*" program "-stderr-pipe*")

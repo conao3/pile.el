@@ -200,9 +200,14 @@ This is done after all necessary filtering has been done."
 
 (defvar pile-process nil)
 
-(defun pile--promise-make-process (section command)
-  "Run COMMAND and output at SECTION."
-  (let* ((ptr (oref section end))
+
+;;; main
+
+(defun pile-make-process (command)
+  "Run COMMAND and output.
+See `magit-call-process'."
+  (let* ((section (pile--insert-section command))
+         (ptr (oref section end))
          (buf (marker-buffer ptr)))
     (with-current-buffer buf
       (goto-char (- ptr 2))
@@ -238,18 +243,6 @@ This is done after all necessary filtering has been done."
                            (if (= code 0) 'magit-process-ok 'magit-process-ng)))
                   (delete-region (- (point) 4) (- (point) 8))))))))
        'merge))))
-
-
-;;; main
-
-(async-defun pile-make-process (command)
-  "Exec COMMAND via `shell-command' async and output `pile-buffer'.
-See `magit-call-process'."
-  (let ((section (pile--insert-section command)))
-    (condition-case _err
-        (let ((res (await (pile--promise-make-process section command)))))
-      (error
-       (ignore)))))
 
 (define-derived-mode pile-section-mode magit-section-mode "Pile"
   "Major-mode for pile buffer."

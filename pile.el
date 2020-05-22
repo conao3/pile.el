@@ -69,14 +69,13 @@ See `magit-process-insert-section'."
     (goto-char (1- (point-max)))
     (with-current-buffer (pile-buffer 'nodisplay)
       (prog1 (magit-insert-section (process)
-               (magit-insert-section (message)
-                 (insert (propertize (file-name-nondirectory program)
-                                     'font-lock-face 'magit-section-heading) " ")
-                 (insert (propertize (mapconcat #'shell-quote-argument args " ")
-                                     'font-lock-face 'magit-section-heading))
-                 (magit-insert-heading)
-                 (insert "\n")))
-        (backward-char 1)))))
+               (insert (propertize (file-name-nondirectory program)
+                                   'font-lock-face 'magit-section-heading) " ")
+               (insert (propertize (mapconcat #'shell-quote-argument args " ")
+                                   'font-lock-face 'magit-section-heading))
+               (magit-insert-heading)
+               (insert "\n\n"))
+        (backward-char 2)))))
 
 (defun pile--prepare-eshell-marker ()
   "Prepare eshel marker for `current-buffer', `point'."
@@ -147,8 +146,8 @@ Reject:
          (error (funcall cleanup)
                 (signal (car err) (cdr err))))))))
 
-(defun pile--output-filter (buf string)
-  "Send the output to BUF from PROCESS (STRING) to the interactive display.
+(defun pile--output-filter (buf _proc string)
+  "Send the output to BUF from PROC (STRING) to the interactive display.
 This is done after all necessary filtering has been done."
   (let ((oprocbuf buf)
         (inhibit-read-only t)
@@ -205,11 +204,12 @@ This is done after all necessary filtering has been done."
        command
        (lambda (proc)
          (setq pile-process proc)
+         (process-put proc 'section section)
          (set-process-filter
           proc
           (lambda (proc string)
             (setq pile-process proc)
-            (pile--output-filter buf string))))
+            (pile--output-filter buf proc string))))
        'merge))))
 
 

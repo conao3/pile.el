@@ -206,11 +206,11 @@ This is done after all necessary filtering has been done."
        command
        (lambda (proc)
          (setq pile-process proc)
+         (oset section value proc)
          (process-put proc 'section section)
          (set-process-filter
           proc
           (lambda (proc string)
-            (setq pile-process proc)
             (pile--output-filter buf proc string))))
        'merge))))
 

@@ -44,6 +44,8 @@
 
 (defvar-local pile-root-section nil
   "Root magit-section in the current buffer.")
+(defvar-local pile-current-marker nil
+  "Current insert marker.")
 
 (defun pile-buffer (&optional nodisplay)
   "Return pile buffer and display if not NODISPLAY.
@@ -54,8 +56,7 @@ See `magit-process-buffer'."
       (pile-section-mode)
       (let ((inhibit-read-only t))
         (setq pile-root-section
-              (magit-insert-section (pilebuf)
-                (insert "\n")))))
+              (magit-insert-section (pilebuf)))))
     (unless nodisplay
       (switch-to-buffer-other-window (current-buffer)))
     (current-buffer)))
@@ -66,16 +67,17 @@ See `magit-process-insert-section'."
   (let ((inhibit-read-only t)
         (program (car command))
         (args (cdr command)))
-    (goto-char (1- (point-max)))
+    (goto-char (point-max))
     (with-current-buffer (pile-buffer 'nodisplay)
-      (prog1 (magit-insert-section (process)
-               (insert (propertize (file-name-nondirectory program)
-                                   'font-lock-face 'magit-section-heading) " ")
-               (insert (propertize (mapconcat #'shell-quote-argument args " ")
-                                   'font-lock-face 'magit-section-heading))
-               (magit-insert-heading)
-               (insert "\n\n"))
-        (backward-char 2)))))
+      (let ((magit-insert-section--parent pile-root-section))
+        (magit-insert-section (process)
+          (insert (propertize (file-name-nondirectory program)
+                              'font-lock-face 'magit-section-heading) " ")
+          (insert (propertize (mapconcat #'shell-quote-argument args " ")
+                              'font-lock-face 'magit-section-heading))
+          (magit-insert-heading)
+          (setq pile-current-marker (point-marker))
+          (insert "\n"))))))
 
 (defun pile--prepare-eshell-marker ()
   "Prepare eshel marker for `current-buffer', `point'."

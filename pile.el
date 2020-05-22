@@ -74,6 +74,9 @@ See `magit-process-insert-section'."
       (goto-char (point-max))
       (let ((magit-insert-section--parent pile-root-section))
         (magit-insert-section (process)
+          (insert (propertize
+                   (format "%3s " "run")
+                   'font-lock-face 'magit-process-ng))
           (insert (propertize (file-name-nondirectory program)
                               'font-lock-face 'pile-section-heading) " ")
           (insert (propertize (mapconcat #'shell-quote-argument args " ")
@@ -223,12 +226,20 @@ This is done after all necessary filtering has been done."
             (lambda (proc event)
               (funcall sentinel proc event)
               (with-current-buffer buf
-                (let ((inhibit-read-only t))
+                (let ((inhibit-read-only t)
+                      (code (process-exit-status proc)))
                   (goto-char (oref section end))
                   (when (and (= ?\n (char-before (point)))
                              (= ?\n (char-before (- (point) 1)))
                              (= ?\n (char-before (- (point) 2))))
-                    (delete-char -1))))))))
+                    (delete-char -1))
+                  (goto-char (+ (oref section start) 4))
+                  (insert (propertize
+                           (format "%3d " code)
+                           'magit-section section
+                           'font-lock-face
+                           (if (= code 0) 'magit-process-ok 'magit-process-ng)))
+                  (delete-region (- (point) 4) (- (point) 8))))))))
        'merge))))
 
 
@@ -238,7 +249,10 @@ This is done after all necessary filtering has been done."
   "Exec COMMAND via `shell-command' async and output `pile-buffer'.
 See `magit-call-process'."
   (let ((section (pile--insert-section command)))
-    (await (pile--promise-make-process section command))))
+    (condition-case _err
+        (let ((res (await (pile--promise-make-process section command)))))
+      (error
+       (ignore)))))
 
 (define-derived-mode pile-section-mode magit-section-mode "Pile"
   "Major-mode for pile buffer."

@@ -220,7 +220,10 @@ This is done after all necessary filtering has been done."
               (with-current-buffer buf
                 (let ((inhibit-read-only t))
                   (goto-char (oref section end))
-                  (delete-char -1)))))))
+                  (when (and (= ?\n (char-before (point)))
+                             (= ?\n (char-before (- (point) 1)))
+                             (= ?\n (char-before (- (point) 2))))
+                    (delete-char -1))))))))
        'merge))))
 
 

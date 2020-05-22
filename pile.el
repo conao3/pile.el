@@ -64,19 +64,19 @@ See `magit-process-buffer'."
   "Insert new section for COMMAND.
 See `magit-process-insert-section'."
   (let ((inhibit-read-only t)
-        (magit-insert-section--parent magit-root-section)
-        (magit-insert-section--oldroot nil)
         (program (car command))
         (args (cdr command)))
     (goto-char (1- (point-max)))
-    (prog1 (magit-insert-section (process)
-             (insert (propertize (file-name-nondirectory program)
-                                 'font-lock-face 'magit-section-heading) " ")
-             (insert (propertize (mapconcat #'shell-quote-argument args " ")
-                                 'font-lock-face 'magit-section-heading))
-             (magit-insert-heading)
-             (insert "\n"))
-      (backward-char 1))))
+    (with-current-buffer (pile-buffer 'nodisplay)
+      (prog1 (magit-insert-section (process)
+               (magit-insert-section (message)
+                 (insert (propertize (file-name-nondirectory program)
+                                     'font-lock-face 'magit-section-heading) " ")
+                 (insert (propertize (mapconcat #'shell-quote-argument args " ")
+                                     'font-lock-face 'magit-section-heading))
+                 (magit-insert-heading)
+                 (insert "\n")))
+        (backward-char 1)))))
 
 (defun pile--prepare-eshell-marker ()
   "Prepare eshel marker for `current-buffer', `point'."
@@ -199,7 +199,7 @@ This is done after all necessary filtering has been done."
   (let* ((ptr (oref section end))
          (buf (marker-buffer ptr)))
     (with-current-buffer buf
-      (goto-char (- ptr 1))
+      ;; (goto-char (- ptr 1))
       (pile--prepare-eshell-marker)
       (pile--promise-make-process-with-handler
        command

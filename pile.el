@@ -211,7 +211,16 @@ This is done after all necessary filtering has been done."
          (set-process-filter
           proc
           (lambda (proc string)
-            (pile--output-filter buf proc string))))
+            (pile--output-filter buf proc string)))
+         (let ((sentinel (process-sentinel proc)))
+           (set-process-sentinel
+            proc
+            (lambda (proc event)
+              (funcall sentinel proc event)
+              (with-current-buffer buf
+                (let ((inhibit-read-only t))
+                  (goto-char (oref section end))
+                  (delete-char -1)))))))
        'merge))))
 
 

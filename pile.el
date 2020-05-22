@@ -188,9 +188,6 @@ This is done after all necessary filtering has been done."
                 (insert-before-markers
                  (propertize string 'magit-section
                              (process-get proc 'section))))
-              (if (= (window-start) (point))
-                  (set-window-start (selected-window)
-                                    (- (point) nchars)))
               (if (= (point) eshell-last-input-end)
                   (set-marker eshell-last-input-end
                               (- eshell-last-input-end nchars)))

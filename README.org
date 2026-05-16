@@ -19,7 +19,7 @@ pile.el provides a structured way to display process output in Emacs using magit
 
 * Requirements
 
-- Emacs 26.1 or later
+- Emacs 28.1 or later
 - magit-section 2.90 or later
 - async-await 1.1 or later
 
